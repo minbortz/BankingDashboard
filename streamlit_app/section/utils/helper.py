@@ -2,12 +2,12 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from typing import Optional
 
-# Configure MySQL connection
-DB_USER = 'root'
-DB_PASS = 'C0conutm!lkshak3'
-DB_HOST = 'localhost:3306'
-DB_NAME1 = 'Database_1'
-DB_NAME2 = 'Database_2'
+# Configure MySQL connection for AlwaysData
+DB_USER = 'mahaka12'  
+DB_PASS = 'C0conutm!lkshake'
+DB_HOST = 'mysql-mahaka12.alwaysdata.net'  
+DB_NAME1 = 'mahaka12_database_1'  
+DB_NAME2 = 'mahaka12_database_2' 
 
 # SQLAlchemy Engine
 engine1 = create_engine(f'mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME1}')
