@@ -4,7 +4,7 @@ from typing import Optional
 
 # Configure MySQL connection for AlwaysData
 DB_USER = 'mahaka12@mysql-mahaka12'  
-DB_PASS = 'C0conutm!lkshake'
+DB_PASS = 'M@gnolia_12345'
 DB_HOST = 'mysql-mahaka12.alwaysdata.net'  
 DB_NAME1 = 'mahaka12_database_1'  
 DB_NAME2 = 'mahaka12_database_2' 
