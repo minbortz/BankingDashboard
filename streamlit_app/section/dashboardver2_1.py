@@ -31,7 +31,7 @@ def show_dashboard():
 
     # File Upload
     st.sidebar.title("Upload File")
-    uploaded_file = st.sidebar.file_uploader("Choose a file", type=["csv", "xlsx", "txt", "adb"])
+    uploaded_file = st.sidebar.file_uploader("Choose a file", type=["csv", "xlsx", "txt"])
 
     @st.cache_data(show_spinner=False)
     def load_file(uploaded_file):
