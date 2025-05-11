@@ -15,18 +15,6 @@ def user_page():
     # Drop the password column before displaying
     if 'password' in df_users.columns:
         df_users = df_users.drop(columns=["password"])
-
-    # Add emojis based on user role
-    def add_emoji(role):
-        if role == "Admin":
-            return "👑"
-        return "🧑‍💼"
-
-    # Apply emojis to the role column
-    df_users["Roles"] = df_users["role"].apply(add_emoji)
-
-    # Reorder columns to show emoji first
-    df_users = df_users[["Roles"] + [col for col in df_users.columns if col != "Roles"]]
     
     original_df = df_users.copy()
 
@@ -48,7 +36,6 @@ def user_page():
             new_username = st.text_input("Username")
             new_email = st.text_input("Email")
             new_password = st.text_input("Password", type="password")
-            new_role = st.selectbox("Role", ["User", "Admin"])
 
             new_user_submitted = st.form_submit_button("Add New User")
 
@@ -60,14 +47,13 @@ def user_page():
 
                         with engine2.begin() as conn:
                             conn.execute(text("""
-                                INSERT INTO user_information (userID, username, email, password, role)
-                                VALUES (:userID, :username, :email, :password, :role)
+                                INSERT INTO user_information (userID, username, email, password)
+                                VALUES (:userID, :username, :email, :password)
                             """), {
                                 "userID" : new_userID,
                                 "username": new_username,
                                 "email": new_email,
                                 "password": hashed_password,
-                                "role": new_role
                             })
                         st.success("✅ New user added successfully.")
                         time.sleep(1.5)
@@ -89,13 +75,11 @@ def user_page():
                                 SET userID = :new_userID,
                                     username = :username,
                                     email = :email,
-                                    role = :role
                                 WHERE userID = :original_userID
                             """), {
                                 "new_userID": row["userID"],
                                 "username": row["username"],
                                 "email": row["email"],
-                                "role": row["role"],
                                 "original_userID": original_userID
                             })
                     st.success("Changes saved successfully.")
