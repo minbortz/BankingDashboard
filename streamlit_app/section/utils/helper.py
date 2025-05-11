@@ -5,7 +5,7 @@ from typing import Optional
 # Configure MySQL connection for Google Cloud SQL
 DB_USER = 'mahaka12'  
 DB_PASS = 'mangolia_12345'  
-DB_HOST = 'analog-hour-459515-f7:asia-southeast1:mahaka12' 
+DB_HOST = '35.186.159.22' 
 DB_NAME1 = 'database1'  
 DB_NAME2 = 'database2'  
 
