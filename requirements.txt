@@ -6,3 +6,4 @@ pymysql>=1.0.3
 altair<5  
 plotly>=5.10.0  
 streamlit>=1.25.0  
+cryptography
