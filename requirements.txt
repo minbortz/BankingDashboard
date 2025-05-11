@@ -7,4 +7,4 @@ altair<5
 plotly>=5.10.0  
 streamlit>=1.45.0
 cryptography
-
+openpyxl
