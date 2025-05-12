@@ -12,20 +12,18 @@ DB_NAME2 = 'database2'
 
 # --- SSL Certificate Paths
 SSL_ARGS = {
-    "ca": "certs/server-ca.pem",
-    "cert": "certs/client-cert.pem",
-    "key": "certs/client-key.pem"
+    "ssl_ca": "certs/server-ca.pem",
+    "ssl_cert": "certs/client-cert.pem",
+    "ssl_key": "certs/client-key.pem"
 }
 
 # --- SQLAlchemy Engines using SSL ---
 engine1 = create_engine(
-    f'mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME1}',
-    connect_args=SSL_ARGS  
+    f'mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME1}?ssl_ca={SSL_ARGS["ssl_ca"]}&ssl_cert={SSL_ARGS["ssl_cert"]}&ssl_key={SSL_ARGS["ssl_key"]}'
 )
 
 engine2 = create_engine(
-    f'mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME2}',
-    connect_args=SSL_ARGS  
+    f'mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME2}?ssl_ca={SSL_ARGS["ssl_ca"]}&ssl_cert={SSL_ARGS["ssl_cert"]}&ssl_key={SSL_ARGS["ssl_key"]}'
 )
 
 def save_dataframe_to_db(df: pd.DataFrame, table_name: str):
