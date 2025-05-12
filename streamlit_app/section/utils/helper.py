@@ -3,14 +3,16 @@ from sqlalchemy import create_engine, text
 from typing import Optional
 
 # Configure MySQL connection for Google Cloud SQL
-DB_USER = 'mahaka12'  
-DB_PASS = 'mangolia_12345'  
-DB_HOST = '35.186.159.22' 
-DB_NAME1 = 'database1'  
-DB_NAME2 = 'database2'  
+DB_USER = 'mahaka12'  # Replace with your actual MySQL username
+DB_PASS = 'mangolia_12345'  # Replace with your actual MySQL password
+DB_HOST = '127.0.0.1'  #  Connect to localhost; the proxy handles the connection
+DB_PORT = 3306
+DB_NAME1 = 'database1'
+DB_NAME2 = 'database2'
 
 # SQLAlchemy Engine
-engine1 = create_engine(f'mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME1}')
+engine1 = create_engine(f'mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME1}')
+engine2 = create_engine(f'mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME2}')
 
 def save_dataframe_to_db(df: pd.DataFrame, table_name: str):
     try:
@@ -31,8 +33,7 @@ def search_database(query: str) -> Optional[pd.DataFrame]:
                 return None
     except Exception as e:
         raise e  # Re-raise the exception to be handled by the caller
-    
-engine2 = create_engine(f'mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME2}')
+ 
 
 def insert_user(user_id, username, password, email, timestamp, role):
     query = text("""
