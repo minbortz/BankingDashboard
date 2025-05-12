@@ -10,6 +10,14 @@ DB_PORT = 3306
 DB_NAME1 = 'database1'
 DB_NAME2 = 'database2'
 
+# --- SSL Certificate Paths 
+SSL_ARGS = {
+    "ssl": {
+        "ca": "certs/server-ca.pem",
+        "cert": "certs/client-cert.pem",
+        "key": "certs/client-key.pem"
+    }
+}
 
 # --- SQLAlchemy Engines using SSL ---
 engine1 = create_engine(
