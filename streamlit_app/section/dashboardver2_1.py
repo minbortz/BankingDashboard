@@ -236,25 +236,21 @@ def show_dashboard():
                     except Exception as e:
                         st.error(f"Error changing data type: {e}")
 
-            # Delete Columns  
-            with st.expander("🗑️ Delete Column"):  
-                columns_to_delete = st.multiselect("Select columns to delete:", st.session_state.uploaded_data.columns)  
+            # Delete Columns
+            with st.expander("🗑️ Delete Column"):
+                columns_to_delete = st.multiselect("Select columns to delete:", st.session_state.uploaded_data.columns)
                 if st.button("Delete Selected Columns"):  
                     if columns_to_delete:  
                         try:  
-                            # Drop the selected columns and update the session state  
                             st.session_state.uploaded_data = st.session_state.uploaded_data.drop(columns=columns_to_delete)  
                             # Save immediately after deletion  
-                            table_name = st.session_state.uploaded_filename.split('.')[0]  
-                            save_successful, message = save_dataframe_to_db(st.session_state.uploaded_data, table_name)  
+                            save_successful, message = save_dataframe_to_db(st.session_state.uploaded_data)  
                             if save_successful:  
-                                st.success("Deleted columns and saved: " + ", ".join(columns_to_delete))  
+                                st.success(f"Deleted columns and saved: {', '.join(columns_to_delete)}")  
                             else:  
-                                st.error("Error saving after deletion: " + message)  
+                                st.error(f"Error saving after deletion: {message}")  
                         except Exception as e:  
-                            st.error("Error: " + str(e))  
-                    else:  
-                        st.warning("Please select at least one column to delete.")  
+                            st.error(f"Error: {e}")  
                         
             st.markdown("### 📦 Final Edited Data")
 
