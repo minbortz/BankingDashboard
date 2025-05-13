@@ -251,8 +251,8 @@ def show_dashboard():
                             else:
                                 st.error(f"Error saving after deletion: {message}")
                         except Exception as e:
-                st.error(f"Error: {e}")
-                        
+                            st.error(f"Error: {e}")
+                   
             st.markdown("### 📦 Final Edited Data")
 
             final_df = st.session_state.uploaded_data  # Use the current, live version
