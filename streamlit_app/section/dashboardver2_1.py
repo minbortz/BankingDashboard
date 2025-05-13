@@ -244,7 +244,8 @@ def show_dashboard():
                         try:  
                             st.session_state.uploaded_data = st.session_state.uploaded_data.drop(columns=columns_to_delete)  
                             # Save immediately after deletion  
-                            save_successful, message = save_dataframe_to_db(st.session_state.uploaded_data)  
+                            table_name = st.session_state.uploaded_filename.split('.')[0]  
+                            save_successful, message = save_dataframe_to_db(st.session_state.uploaded_data, table_name)  
                             if save_successful:  
                                 st.success(f"Deleted columns and saved: {', '.join(columns_to_delete)}")  
                             else:  
