@@ -58,10 +58,6 @@ def show_dashboard():
                 session_state.original_dtypes = df.dtypes.to_dict()
         save_original_dtypes(df, st.session_state)
         
-        if uploaded_file in st.session_state:
-            table_name = st.session_state.uploaded_filename.split('.')[0]
-        else:
-            table_name = "default_table"
     # Main Dashboard
     if st.session_state.active_page == "Dashboard":
         st.write(f"Welcome, {st.session_state.get('username', 'User')}!")
@@ -212,7 +208,7 @@ def show_dashboard():
             if st.session_state.get('editable_table') is not None and not edited_df.equals(st.session_state.uploaded_data):  
                 st.session_state.uploaded_data = edited_df.copy()  
                 # Auto-save to database  
-                #table_name = st.session_state.uploaded_filename.split('.')[0]  
+                table_name = st.session_state.uploaded_filename.split('.')[0]  
                 save_successful, message = save_dataframe_to_db(st.session_state.uploaded_data, table_name)  
                 if save_successful:  
                     st.success("Changes saved to database automatically")  
@@ -248,6 +244,7 @@ def show_dashboard():
                         try:  
                             st.session_state.uploaded_data = st.session_state.uploaded_data.drop(columns=columns_to_delete)  
                             # Save immediately after deletion  
+                            table_name = st.session_state.uploaded_filename.split('.')[0]
                             save_successful, message = save_dataframe_to_db(st.session_state.uploaded_data, table_name) 
                             if save_successful:  
                                 st.success(f"Deleted columns and saved: {', '.join(columns_to_delete)}")  
