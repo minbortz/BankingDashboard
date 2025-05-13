@@ -239,35 +239,19 @@ def show_dashboard():
             # Delete Columns
             with st.expander("🗑️ Delete Column"):
                 columns_to_delete = st.multiselect("Select columns to delete:", st.session_state.uploaded_data.columns)
-                if st.button("Delete Selected Columns"):  
-                    if columns_to_delete:  
-                        try:  
-                            # Debug prints  
-                            st.write("Debug: Checking session state variables")  
-                            st.write("uploaded_filename:", st.session_state.get('uploaded_filename', 'Not found'))  
-                            st.write("DataFrame shape before deletion:", st.session_state.uploaded_data.shape)  
-                              
-                            # Drop columns  
-                            st.session_state.uploaded_data = st.session_state.uploaded_data.drop(columns=columns_to_delete)  
-                              
-                            # Verify table_name creation  
-                            if 'uploaded_filename' not in st.session_state:  
-                                st.error("No filename found in session state!")  
-                                return  
-                                  
-                            table_name = st.session_state.uploaded_filename.split('.')[0]  
-                            st.write("Debug: table_name created:", table_name)  
-                              
-                            # Save to database  
-                            save_successful, message = save_dataframe_to_db(st.session_state.uploaded_data, table_name)  
-                              
-                            if save_successful:  
-                                st.success(f"Deleted columns and saved: {', '.join(columns_to_delete)}")  
-                            else:  
-                                st.error(f"Error saving after deletion: {message}")  
-                        except Exception as e:  
-                            st.error(f"Error: {e}")  
-                            st.error("Full error details:", str(e.__class__.__name__))  
+                if st.button("Delete Selected Columns"):
+                    if columns_to_delete:
+                        try:
+                        st.session_state.uploaded_data = st.session_state.uploaded_data.drop(columns=columns_to_delete)
+                        # Save immediately after deletion
+                        table_name = st.session_state.uploaded_filename.split('.')[0]
+                        save_successful, message = save_dataframe_to_db(st.session_state.uploaded_data, table_name)
+                            if save_successful:
+                                st.success(f"Deleted columns and saved: {', '.join(columns_to_delete)}")
+                            else:
+                                st.error(f"Error saving after deletion: {message}")
+                    except Exception as e:
+                st.error(f"Error: {e}")
                         
             st.markdown("### 📦 Final Edited Data")
 
