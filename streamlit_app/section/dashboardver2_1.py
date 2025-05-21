@@ -45,7 +45,6 @@ def show_dashboard():
 
     if uploaded_file is not None:
         df = load_file(uploaded_file)
-        df.insert(0, 'id', range(1, len(df) + 1))
         st.session_state.uploaded_data = df.copy()
         st.session_state.uploaded_filename = uploaded_file.name
 
