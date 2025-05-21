@@ -276,14 +276,9 @@ def show_dashboard():
                 st.dataframe(final_df, use_container_width=True)
 
             st.markdown("### 📥 Export Data")
-            
-            # Remove 'id' column if present before export
-            export_df = final_df.drop(columns=['id'], errors='ignore')
-            csv = export_df.to_csv(index=False).encode("utf-8")
-            original_filename = st.session_state.get('uploaded_filename', 'data.csv')
-            base_name = original_filename.rsplit('.', 1)[0]
-            download_filename = f"{base_name}_updated.csv"
-            st.download_button("⬇️ Download CSV", csv, download_filename, "text/csv", key="downl")  
+            csv = final_df.to_csv(index=False).encode("utf-8")
+            st.download_button("⬇️ Download CSV", csv, "updated_data.csv", "text/csv", key="downl")
+                        
             
             # Search SQL
             st.subheader("🔍 Search Database")
