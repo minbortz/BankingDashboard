@@ -2,13 +2,13 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from typing import Optional
 
-# --- MySQL Configuration for Google Cloud SQL ---
-DB_USER = 'mahaka12'
-DB_PASS = 'mangolia_12345'
-DB_HOST = '35.186.159.22'  
-DB_PORT = 3306
-DB_NAME1 = 'database1'
-DB_NAME2 = 'database2'
+# --- MySQL Configuration for Aiven Cloud ---
+DB_USER = 'avnadmin'
+DB_PASS = 'AVNS_SaCO6Meh-b2gvU0y1Us'
+DB_HOST = 'mysql-1310-mahaka12.j.aivencloud.com'  
+DB_PORT = 21873
+DB_NAME1 = 'database_1'
+DB_NAME2 = 'database_2'
 
 # --- SQLAlchemy Engines ---
 engine1 = create_engine(
