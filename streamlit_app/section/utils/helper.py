@@ -21,12 +21,17 @@ engine2 = create_engine(
 
 def save_dataframe_to_db(df: pd.DataFrame, table_name: str):
     try:
-        # Convert table name to lowercase, safe format
         safe_table_name = table_name.lower().replace(" ", "_")
-        df.to_sql(safe_table_name, con=engine1, if_exists='replace', index=False)
+        
+        # Add id column for primary key inside this function only
+        df_to_save = df.copy()
+        df_to_save.insert(0, 'id', range(1, len(df_to_save) + 1))
+        
+        df_to_save.to_sql(safe_table_name, con=engine1, if_exists='replace', index=False)
         return True, f"Data saved to `{safe_table_name}` successfully."
     except Exception as e:
         return False, str(e)
+
     
 def search_database(query: str) -> Optional[pd.DataFrame]:
     try:
