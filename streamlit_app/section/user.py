@@ -47,7 +47,7 @@ def user_page():
 
                         with engine2.begin() as conn:
                             conn.execute(text("""
-                                INSERT INTO user_information (userID, username, email, password)
+                                INSERT INTO user_information (userID, username, email, password, role)
                                 VALUES (:userID, :username, :email, :password, 'User')
                             """), {
                                 "userID" : new_userID,
