@@ -23,7 +23,7 @@ def user_page():
 
         edited_df = st.data_editor(
             df_users,
-            column_config={"userID": st.column_config.TextColumn("User ID")},  # Show editable userID
+            column_config={"userID": st.column_config.NumberColumn("User ID")},  # Show editable userID
             num_rows="dynamic",
             use_container_width=True,
             key="user_editor"
