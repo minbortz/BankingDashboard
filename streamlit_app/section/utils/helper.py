@@ -160,3 +160,8 @@ def highlight_critical_and_edited(df, original_df, critical_columns):
                     styles.at[i, col] = 'background-color: #ffeeba; color: black;'
 
     return styles
+
+def highlight_null(val):
+    if pd.isnull(val):
+        return 'background-color: red'
+    return ''
