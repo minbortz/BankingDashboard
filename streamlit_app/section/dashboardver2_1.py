@@ -195,25 +195,25 @@ def show_dashboard():
                 else:
                     col_configs[col] = column_config.Column(label=col)
 
-            styled_df = st.session_state.uploaded_data.style.applymap(highlight_null)
+        st.subheader("🧹 Clean & Edit Your Data")  
+            edited_df = st.data_editor(  
+                st.session_state.uploaded_data,  
+                use_container_width=True,  
+                num_rows="dynamic",  
+                key="editable_table",  
+                column_config=col_configs  
+            )  
             
-            edited_df = st.data_editor(
-                styled_df,
-                use_container_width=True,
-                num_rows="dynamic",
-                key="editable_table",
-                column_config=col_configs
-            )
-            
-            if st.session_state.get('editable_table') is not None and not edited_df.equals(st.session_state.uploaded_data):
-                st.session_state.uploaded_data = edited_df.copy()
-                table_name = st.session_state.uploaded_filename.split('.')[0]
-                save_successful, message = save_dataframe_to_db(st.session_state.uploaded_data, table_name)
-                if save_successful:
-                    st.success("Changes saved to database automatically")
-                else:
-                    st.error(f"Error saving changes: {message}")
-                    
+            # Check if data was edited  
+            if st.session_state.get('editable_table') is not None and not edited_df.equals(st.session_state.uploaded_data):  
+                st.session_state.uploaded_data = edited_df.copy()  
+                # Auto-save to database  
+                table_name = st.session_state.uploaded_filename.split('.')[0]  
+                save_successful, message = save_dataframe_to_db(st.session_state.uploaded_data, table_name)  
+                if save_successful:  
+                    st.success("Changes saved to database automatically")  
+                else:  
+                    st.error(f"Error saving changes: {message}") 
             # Column Operations
             st.subheader("🛠️ Column Operations")
 
