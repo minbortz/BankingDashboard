@@ -161,7 +161,3 @@ def highlight_critical_and_edited(df, original_df, critical_columns):
 
     return styles
 
-def highlight_null(val):
-    if pd.isnull(val):
-        return 'background-color: red'
-    return ''
