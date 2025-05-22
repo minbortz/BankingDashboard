@@ -195,7 +195,7 @@ def show_dashboard():
                 else:
                     col_configs[col] = column_config.Column(label=col)
 
-        st.subheader("🧹 Clean & Edit Your Data")  
+            st.subheader("🧹 Clean & Edit Your Data")  
             edited_df = st.data_editor(  
                 st.session_state.uploaded_data,  
                 use_container_width=True,  
