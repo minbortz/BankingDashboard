@@ -133,31 +133,36 @@ def identify_critical_columns(df_columns, keywords=CRITICAL_KEYWORDS):
     return list(critical_cols)
 
 def highlight_critical_and_edited(df, original_df, critical_columns):
-    """Highlights only edited cells. Edited critical columns are shown in red + larger font."""
+    """Highlight edited (green), null (yellow), and critical (orange) cells, in priority order."""
+
     styles = pd.DataFrame("", index=df.index, columns=df.columns)
 
     for col in df.columns:
-        if col not in original_df.columns:
-            continue  # skip if column not in original (to avoid errors)
-
         for i in df.index:
-            if i not in original_df.index:
-                continue  # skip rows that don't exist in the original
-
             val_df = df.at[i, col]
-            val_orig = original_df.at[i, col]
+            val_orig = original_df.at[i, col] if col in original_df.columns and i in original_df.index else None
 
+            # Start with no style
+            style = ""
+
+            # Check if edited
             edited = False
-            if pd.isnull(val_df) and pd.isnull(val_orig):
-                continue
-            elif str(val_df) != str(val_orig):
-                edited = True
+            if val_orig is not None:
+                if pd.isnull(val_orig) and pd.isnull(val_df):
+                    edited = False
+                elif str(val_df) != str(val_orig):
+                    edited = True
+            elif pd.notnull(val_df):
+                edited = True  # New non-null value where there was None
 
             if edited:
-                if col in critical_columns:
-                    styles.at[i, col] = 'background-color: #ffeeba; color: red; font-size: 120%;'
-                else:
-                    styles.at[i, col] = 'background-color: #ffeeba; color: black;'
+                style = 'background-color: #90ee90; color: black;'  # light green
+            elif pd.isnull(val_df):
+                style = 'background-color: yellow;'
+            elif col in critical_columns:
+                style = 'background-color: #ffd8a8; color: black;'  # light orange
+
+            styles.at[i, col] = style
 
     return styles
 
