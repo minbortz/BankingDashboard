@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import numpy as np
 from streamlit import column_config
 from section.utils.helper import save_dataframe_to_db, search_database, highlight_critical_and_edited, identify_critical_columns, CRITICAL_KEYWORDS
 from section.database import database_page
@@ -17,17 +18,20 @@ def show_dashboard():
     if 'uploaded_filename' not in st.session_state:
         st.session_state.uploaded_filename = None
 
-    # Sidebar Navigation
     selected = st.sidebar.radio("Select Page",
-        [":signal_strength: Dashboard", ":card_file_box: Database", ":cop: User"]
+        [":signal_strength: Dashboard", ":card_file_box: Database", ":cop: User"],
+        index=["Dashboard", "Database", "User"].index(st.session_state.get("active_page", "Dashboard"))
     )
 
-    if selected == ":signal_strength: Dashboard":
-        st.session_state.active_page = "Dashboard"
-    elif selected == ":card_file_box: Database":
-        st.session_state.active_page = "Database"
-    elif selected == ":cop: User":
-        st.session_state.active_page = "User"
+    # Map from label to page key
+    page_map = {
+        ":signal_strength: Dashboard": "Dashboard",
+        ":card_file_box: Database": "Database",
+        ":cop: User": "User"
+    }
+
+    if st.session_state.get("active_page") != page_map[selected]:
+        st.session_state.active_page = page_map[selected]
 
     # File Upload
     st.sidebar.title("Upload File")
@@ -44,9 +48,16 @@ def show_dashboard():
         return None
 
     if uploaded_file is not None:
-        df = load_file(uploaded_file)
-        st.session_state.uploaded_data = df.copy()
-        st.session_state.uploaded_filename = uploaded_file.name
+        # Only load the file into session state if it's a new file or no data yet
+        if st.session_state.uploaded_filename != uploaded_file.name or st.session_state.uploaded_data is None:
+            df = load_file(uploaded_file)
+            st.session_state.uploaded_data = df.copy()
+            st.session_state.uploaded_filename = uploaded_file.name
+
+            # Save original data for change tracking only once per file
+            st.session_state.original_data = df.copy()
+        else:
+            df = None
 
         # Save original data for change tracking
         if 'original_data' not in st.session_state:
@@ -203,17 +214,91 @@ def show_dashboard():
                 key="editable_table",  
                 column_config=col_configs  
             )  
-            
-            # Check if data was edited  
-            if st.session_state.get('editable_table') is not None and not edited_df.equals(st.session_state.uploaded_data):  
-                st.session_state.uploaded_data = edited_df.copy()  
+
+            # Check if data was edited by comparing with session state
+            if not edited_df.equals(st.session_state.uploaded_data):
+                st.session_state.uploaded_data = edited_df.copy()
+
                 # Auto-save to database  
                 table_name = st.session_state.uploaded_filename.split('.')[0]  
                 save_successful, message = save_dataframe_to_db(st.session_state.uploaded_data, table_name)  
                 if save_successful:  
                     st.success("Changes saved to database automatically")  
                 else:  
-                    st.error(f"Error saving changes: {message}") 
+                    st.error(f"Error saving changes: {message}")
+
+            if st.session_state.uploaded_data is not None:
+                df = st.session_state.uploaded_data
+
+                # Detect columns with nulls
+                null_cols = df.columns[df.isnull().any()].tolist()
+
+                if null_cols:
+                    st.subheader("Null Value Imputation Options")
+
+                    selected_col = st.selectbox("Select column to impute nulls", null_cols)
+                    col_dtype = df[selected_col].dtype  # Define dtype here safely
+
+                    option = st.radio(
+                        f"How do you want to replace nulls in '{selected_col}'?",
+                        ('Mean', 'Zero', 'Custom Value')
+                    )
+
+                    replacement = None  # Initialize
+
+                    if option == 'Custom Value':
+                        custom_val = st.text_input("Enter your custom replacement value:")
+
+                        if custom_val.strip() == "":
+                            st.warning("Please enter a value.")
+                        else:
+                            # Try to convert custom_val to appropriate type based on col_dtype
+                            try:
+                                if np.issubdtype(col_dtype, np.integer):
+                                    val_float = float(custom_val)
+                                    if val_float.is_integer():
+                                        replacement = int(val_float)
+                                    else:
+                                        st.warning("Float will be truncated to int.")
+                                        replacement = int(val_float)
+                                elif np.issubdtype(col_dtype, np.floating):
+                                    replacement = float(custom_val)
+                                else:
+                                    # For non-numeric columns, keep as string
+                                    replacement = custom_val
+                            except ValueError:
+                                st.error("Custom value must match the column data type.")
+
+                    if st.button("Replace Nulls"):
+                        if option == 'Mean':
+                            if np.issubdtype(col_dtype, np.number):
+                                replacement = df[selected_col].mean()
+                            else:
+                                st.error("Mean imputation only available for numeric columns.")
+                                replacement = None
+                        elif option == 'Zero':
+                            if np.issubdtype(col_dtype, np.number):
+                                replacement = 0
+                            else:
+                                st.error("Zero replacement only available for numeric columns.")
+                                replacement = None
+                        # For custom value, replacement was already set above
+
+                        if replacement is not None:
+                            df[selected_col].fillna(replacement, inplace=True)
+                            st.success(f"Null values in '{selected_col}' replaced with {replacement}")
+
+                            # Save back to session state
+                            st.session_state.uploaded_data = df.copy()
+
+                            # Save to DB immediately
+                            table_name = st.session_state.uploaded_filename.split('.')[0]
+                            save_successful, message = save_dataframe_to_db(df, table_name)
+                            if save_successful:
+                                st.success("Updated data saved to database.")
+                            else:
+                                st.error(f"Error saving changes: {message}")
+
             # Column Operations
             st.subheader("🛠️ Column Operations")
 
@@ -255,25 +340,26 @@ def show_dashboard():
                    
             st.markdown("### 📦 Final Edited Data")
 
-            final_df = st.session_state.uploaded_data  # Use the current, live version
-            original_df = st.session_state.get('original_data', final_df.copy())
+            # Always get the current and original data from session state
+            final_df = st.session_state.get('uploaded_data')
+            original_df = st.session_state.get('original_data')
 
-            # Align columns before comparison
-            original_df = original_df[final_df.columns]
+            if final_df is not None and original_df is not None:
+                # Align columns and indexes
+                original_df = original_df[final_df.columns]
+                final_df.reset_index(drop=True, inplace=True)
+                original_df.reset_index(drop=True, inplace=True)
 
-            # Reset indexes for comparison
-            final_df.reset_index(drop=True, inplace=True)
-            original_df.reset_index(drop=True, inplace=True)
-
-            # highlight edited cells
-            if final_df.shape[0] == original_df.shape[0]:
-                styled_df = final_df.style.apply(
-                    lambda x: highlight_critical_and_edited(final_df, original_df, critical_cols_to_highlight),
-                    axis=None
-                )
-                st.write(styled_df)
+                if final_df.shape[0] == original_df.shape[0]:
+                    styled_df = final_df.style.apply(
+                        lambda x: highlight_critical_and_edited(final_df, original_df, critical_cols_to_highlight),
+                        axis=None
+                    )
+                    st.write(styled_df)
+                else:
+                    st.dataframe(final_df, use_container_width=True)
             else:
-                st.dataframe(final_df, use_container_width=True)
+                st.warning("No data found. Please upload a file.")
 
             st.markdown("### 📥 Export Data")
             csv = final_df.to_csv(index=False).encode("utf-8")
@@ -330,4 +416,3 @@ def show_dashboard():
     # User Page
     elif st.session_state.active_page == "User":
         user_page()
-
