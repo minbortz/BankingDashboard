@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 from streamlit import column_config
-from section.utils.helper import save_dataframe_to_db, search_database, highlight_critical_and_edited, identify_critical_columns, CRITICAL_KEYWORDS
+from section.utils.helper import save_dataframe_to_db, search_database, highlight_critical_and_edited, identify_critical_columns, CRITICAL_KEYWORDS, is_safe_sql
 from section.database import database_page
 from section.user import user_page
 
@@ -416,15 +416,21 @@ def show_dashboard():
             # Search SQL
             st.subheader("🔍 Search Database")
             search_input = st.text_area("Enter SQL query", key="database_search_input", height=150)
+
             if search_input:
-                try:
-                    results_df = search_database(search_input)
-                    if results_df is not None:
-                        st.dataframe(results_df)
-                    else:
-                        st.info("No data returned for the query.")
-                except Exception as e:
-                    st.error(f"Query Error: {e}")
+                user_role = st.session_state.get("user_role", "user")  # Default to 'user' if not set
+
+                if is_safe_sql(search_input, user_role):
+                    try:
+                        results_df = search_database(search_input)
+                        if results_df is not None:
+                            st.dataframe(results_df)
+                        else:
+                            st.info("No data returned for the query.")
+                    except Exception as e:
+                        st.error(f"Query Error: {e}")
+                else:
+                    st.error("⚠️ You are not allowed to run this type of SQL command.")
 
             # Optional Charts Section
             st.sidebar.subheader("Optional Charts")
