@@ -166,3 +166,12 @@ def highlight_critical_and_edited(df, original_df, critical_columns):
 
     return styles
 
+DANGEROUS_COMMANDS = ["DROP", "DELETE"]
+
+def is_safe_sql(query: str, user_role: str) -> bool:
+    """Check if the query is safe based on user role."""
+    query_upper = query.upper()
+    for cmd in DANGEROUS_COMMANDS:
+        if cmd in query_upper:
+            return user_role == "admin"  # Only admin can run dangerous SQL
+    return True
