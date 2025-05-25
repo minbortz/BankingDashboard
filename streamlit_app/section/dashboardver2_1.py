@@ -9,7 +9,6 @@ from section.user import user_page
 
 
 def show_dashboard():
-
     # Session State Initialization
     if 'uploaded_data' not in st.session_state:
         st.session_state.uploaded_data = None
@@ -17,6 +16,12 @@ def show_dashboard():
         st.session_state.active_page = "Dashboard"
     if 'uploaded_filename' not in st.session_state:
         st.session_state.uploaded_filename = None
+    if 'upload_error' not in st.session_state:
+        st.session_state.upload_error = None
+    if 'original_data' not in st.session_state:
+        st.session_state.original_data = None
+    if 'original_dtypes' not in st.session_state:
+        st.session_state.original_dtypes = None
 
     selected = st.sidebar.radio("Select Page",
         [":signal_strength: Dashboard", ":card_file_box: Database", ":cop: User"],
@@ -33,48 +38,74 @@ def show_dashboard():
     if st.session_state.get("active_page") != page_map[selected]:
         st.session_state.active_page = page_map[selected]
 
-    # File Upload
+    # File Upload with Optimized Error Handling
     st.sidebar.title("Upload File")
     uploaded_file = st.sidebar.file_uploader("Choose a file", type=["csv", "xlsx", "txt"])
-
-    @st.cache_data(show_spinner=False)
-    def load_file(uploaded_file):
-        if uploaded_file.name.endswith('.csv'):
-            return pd.read_csv(uploaded_file, low_memory=False)
-        elif uploaded_file.name.endswith('.xlsx'):
-            return pd.read_excel(uploaded_file)
-        elif uploaded_file.name.endswith('.txt'):
-            return pd.read_csv(uploaded_file, delimiter='\t', low_memory=False)
-        return None
-
-    if uploaded_file is not None:
-        # Only load the file into session state if it's a new file or no data yet
-        if st.session_state.uploaded_filename != uploaded_file.name or st.session_state.uploaded_data is None:
-            df = load_file(uploaded_file)
-            st.session_state.uploaded_data = df.copy()
-            st.session_state.uploaded_filename = uploaded_file.name
-
-            # Save original data for change tracking only once per file
-            st.session_state.original_data = df.copy()
-        else:
-            df = None
-
-        # Save original data for change tracking
-        if 'original_data' not in st.session_state:
-            st.session_state.original_data = df.copy()
-
-        # Save original dtypes for reference
-        def save_original_dtypes(df, session_state):
-            if 'original_dtypes' not in session_state:
-                session_state.original_dtypes = df.dtypes.to_dict()
-        save_original_dtypes(df, st.session_state)
+    
+    if uploaded_file and uploaded_file != st.session_state.get('uploaded_filename'):
+        st.session_state.upload_error = None
+        # Clear previous data if new file is selected
+        st.session_state.uploaded_data = None
+        st.session_state.uploaded_filename = None
+    
+    if uploaded_file:
+        @st.cache_data(show_spinner="Loading file...")
+        def load_file(uploaded_file):
+            try:
+                # Quick size check first
+                if uploaded_file.size == 0:
+                    return None, "Uploaded file is empty (0 bytes)"
+                
+                file_ext = uploaded_file.name.split('.')[-1].lower()
+                
+                if file_ext == 'csv':
+                    try:
+                        return pd.read_csv(uploaded_file, low_memory=False), None
+                    except UnicodeDecodeError:
+                        # Try with different encodings if UTF-8 fails
+                        try:
+                            return pd.read_csv(uploaded_file, encoding='latin1', low_memory=False), None
+                        except Exception as e:
+                            return None, f"CSV Error: {str(e)}"
+                
+                elif file_ext == 'xlsx':
+                    try:
+                        return pd.read_excel(uploaded_file), None
+                    except Exception as e:
+                        return None, f"Excel Error: {str(e)}"
+                
+                elif file_ext == 'txt':
+                    try:
+                        return pd.read_csv(uploaded_file, delimiter='\t', low_memory=False), None
+                    except Exception as e:
+                        return None, f"Text File Error: {str(e)}"
+                
+                return None, "Unsupported file format"
+            
+            except Exception as e:
+                return None, f"Unexpected error: {str(e)}"
         
+        # Load file and get both data and error
+        data, error = load_file(uploaded_file)
+        
+        if error:
+            st.session_state.upload_error = error
+            st.error(f"⚠️ File Error: {error}")  # Show only in main area
+            st.session_state.uploaded_data = None
+        elif data is not None:
+            st.session_state.uploaded_data = data
+            st.session_state.uploaded_filename = uploaded_file.name
+            st.session_state.original_data = data.copy()
+            st.session_state.original_dtypes = data.dtypes.to_dict()
+            st.sidebar.success(f"Loaded {uploaded_file.name}")
+
     # Main Dashboard
     if st.session_state.active_page == "Dashboard":
         st.write(f"Welcome, {st.session_state.get('username', 'User')}!")
         st.title("📊 Banking Data Dashboard")
 
         if st.session_state.uploaded_data is not None:
+            # Always work with a copy from session state
             df = st.session_state.uploaded_data.copy()
 
             # --- Memory Optimization ---
@@ -305,19 +336,35 @@ def show_dashboard():
             # Change Data Type
             with st.expander("🔀 Change Column Data Type"):
                 col_to_change = st.selectbox("Select column to change:", edited_df.columns)
-                current_dtype = edited_df[col_to_change].dtype
-                new_dtype = st.selectbox("Select new data type:",
-                                         ['int64', 'int32', 'int16', 'int8', 'float64', 'float32', 'object', 'category', 'datetime64[ns]'],
-                                         index=['int64', 'int32', 'int16', 'int8', 'float64', 'float32', 'object', 'category', 'datetime64[ns]'].index(str(current_dtype)))
+                current_dtype = str(edited_df[col_to_change].dtype)
+                
+                # Simplified dtype options and index finding
+                dtype_options = ['int64', 'int32', 'int16', 'int8', 'float64', 'float32', 'object', 'category', 'datetime64[ns]']
+                current_index = dtype_options.index(current_dtype) if current_dtype in dtype_options else 0
+                
+                new_dtype = st.selectbox("Select new data type:", dtype_options, index=current_index)
+                
                 change_type_button = st.button("💾 Apply Data Type Change")
+                
                 if change_type_button:
                     try:
+                        # Create a copy of the DataFrame to modify
+                        modified_df = edited_df.copy()
+                        
                         if new_dtype == 'datetime64[ns]':
-                            edited_df[col_to_change] = pd.to_datetime(edited_df[col_to_change], errors='coerce')
+                            # Use pd.to_datetime and assign back to column
+                            modified_df[col_to_change] = pd.to_datetime(
+                                modified_df[col_to_change], 
+                                errors='coerce'
+                            )
                         else:
-                            edited_df[col_to_change] = edited_df[col_to_change].astype(new_dtype)
+                            # Direct assignment for other types
+                            modified_df[col_to_change] = modified_df[col_to_change].astype(new_dtype)
+                        
+                        # Update the session state with the modified DataFrame
+                        st.session_state.uploaded_data = modified_df
                         st.success(f"Data type of '{col_to_change}' changed to '{new_dtype}'.")
-                        st.session_state.uploaded_data = edited_df.copy()
+                        
                     except Exception as e:
                         st.error(f"Error changing data type: {e}")
 
