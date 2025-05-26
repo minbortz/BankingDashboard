@@ -74,7 +74,7 @@ def user_page():
                                 UPDATE user_information
                                 SET userID = :new_userID,
                                     username = :username,
-                                    email = :email,
+                                    email = :email
                                 WHERE userID = :original_userID
                             """), {
                                 "new_userID": row["userID"],
