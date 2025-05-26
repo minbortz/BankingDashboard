@@ -1,6 +1,7 @@
 import streamlit as st
 import hashlib
 import time 
+import re
 from section import dashboardver2_1
 from datetime import datetime
 from section.utils.helper import insert_user, insert_admin, get_admin_by_username, get_user_by_username
@@ -13,24 +14,42 @@ VALID_ADMIN_KEY = 13102002
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
+def is_valid_email(email):
+    """Check if the email has a valid format (contains @ and .)"""
+    return '@' in email and '.' in email.split('@')[-1]
+
 def signup(user_type, user_id, username, password, email, admin_key=None):
+    if not all([user_id, username, password, email]):
+        return False, "Please fill in all fields."
+    
+    if not is_valid_email(email):
+        return False, "Invalid email format. Must contain '@' and a domain (e.g., '.com')."
+    
+    if user_type == "Admin":
+        if not admin_key:
+            return False, "Admin Key is required for Admin signup."
+        try:
+            if int(admin_key.strip()) != VALID_ADMIN_KEY:
+                return False, "Invalid Admin Key."
+        except ValueError:
+            return False, "Admin Key must be a number."
+    
     timestamp = datetime.now()
     hashed_password = hash_password(password)
-
+    
     try:
+        role = user_type
         if user_type == "User":
-            role = "User"
             insert_user(user_id, username, hashed_password, email, timestamp, role)
-            return True, "User signed up and stored in database."
-
         elif user_type == "Admin":
-            if not admin_key or int(admin_key.strip()) != VALID_ADMIN_KEY:
-                return False, "Invalid Admin Key."
-            role = "Admin"
             insert_admin(user_id, username, hashed_password, email, timestamp, role)
-            return True, "Admin signed up and stored in database."
+        
+        return True, f"{user_type} signed up successfully!"
+    
     except Exception as e:
-        return False, f"Database error: {str(e)}"
+        if "duplicate" in str(e).lower():
+            return False, "Username, Email, or ID already exists."
+        return False, "Signup failed. Please check your details and try again."
 
 
 def login(username, password):
