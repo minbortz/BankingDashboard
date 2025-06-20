@@ -23,19 +23,18 @@ def show_dashboard():
     if 'original_dtypes' not in st.session_state:
         st.session_state.original_dtypes = None
 
+    page_map = {
+    "📶 Dashboard": "Dashboard",
+    "🗃️ Database": "Database",
+    "👮 User": "User"
+    }
+    
     selected = st.sidebar.radio(
         "Select Page",
         list(page_map.keys()),
         index=list(page_map.values()).index(st.session_state.get("active_page", "Dashboard"))
     )
-
-    page_map = {
-        "📶 Dashboard": "Dashboard",
-        "🗃️ Database": "Database",
-        "👮 User": "User"
-    }
-
-
+    
     if st.session_state.get("active_page") != page_map[selected]:
         st.session_state.active_page = page_map[selected]
 
