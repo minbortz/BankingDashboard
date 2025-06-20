@@ -34,9 +34,6 @@ def show_dashboard():
         list(page_map.keys()),
         index=list(page_map.values()).index(st.session_state.get("active_page", "Dashboard"))
     )
-    
-    if st.session_state.get("active_page") != page_map[selected]:
-        st.session_state.active_page = page_map[selected]
 
  # Update active page if selection changed
     if st.session_state.get("active_page") != page_map[selected]:
