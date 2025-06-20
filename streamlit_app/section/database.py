@@ -54,7 +54,7 @@ def _display_tables(table_names):
 
 def database_page():
     """Displays the database page with admin controls."""
-    st.title(":card_file_box: Database Tables")
+    st.title("🗃️ Database Tables")
     
     try:
         table_names = _fetch_table_names()
