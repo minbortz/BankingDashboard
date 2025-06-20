@@ -29,14 +29,16 @@ def show_dashboard():
     "👮 User": "User"
     }
     
+    if "active_page" not in st.session_state:
+        st.session_state.active_page = "Dashboard"
+    
     selected = st.sidebar.radio(
         "Select Page",
-        list(page_map.keys()),
-        index=list(page_map.values()).index(st.session_state.get("active_page", "Dashboard"))
+        options=list(page_map.keys()),
+        index=list(page_map.values()).index(st.session_state.active_page)
     )
-
- # Update active page if selection changed
-    if st.session_state.get("active_page") != page_map[selected]:
+    
+    if page_map[selected] != st.session_state.active_page:
         st.session_state.active_page = page_map[selected]
 
     st.sidebar.title("Upload File")
