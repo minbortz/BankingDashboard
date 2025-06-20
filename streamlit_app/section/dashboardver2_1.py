@@ -24,7 +24,7 @@ def show_dashboard():
         st.session_state.original_dtypes = None
 
     selected = st.sidebar.radio("Select Page",
-        ["📶 Dashboard Dashboard", "🗃️ Database Database", "👮 User"],
+        ["📶 Dashboard: Dashboard", "🗃️ Database: Database", "👮: User"],
         index=["Dashboard", "Database", "User"].index(st.session_state.get("active_page", "Dashboard"))
     )
 
