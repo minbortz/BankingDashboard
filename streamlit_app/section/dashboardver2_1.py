@@ -38,50 +38,57 @@ def show_dashboard():
     if st.session_state.get("active_page") != page_map[selected]:
         st.session_state.active_page = page_map[selected]
 
-    # File Upload with Optimized Error Handling
+ # Update active page if selection changed
+    if st.session_state.get("active_page") != page_map[selected]:
+        st.session_state.active_page = page_map[selected]
+
     st.sidebar.title("Upload File")
-    uploaded_file = st.sidebar.file_uploader("Choose a file", type=["csv", "xlsx", "txt"])
-    
+    uploaded_file = st.sidebar.file_uploader("Choose a file", type=["csv", "xlsx", "txt", "json"])
+
     if uploaded_file and uploaded_file != st.session_state.get('uploaded_filename'):
         st.session_state.upload_error = None
         # Clear previous data if new file is selected
         st.session_state.uploaded_data = None
         st.session_state.uploaded_filename = None
-    
+
     if uploaded_file:
         @st.cache_data(show_spinner="Loading file...")
         def load_file(uploaded_file):
             try:
-                # Quick size check first
                 if uploaded_file.size == 0:
                     return None, "Uploaded file is empty (0 bytes)"
-                
+
                 file_ext = uploaded_file.name.split('.')[-1].lower()
-                
+
                 if file_ext == 'csv':
                     try:
                         return pd.read_csv(uploaded_file, low_memory=False), None
                     except UnicodeDecodeError:
-                        # Try with different encodings if UTF-8 fails
                         try:
                             return pd.read_csv(uploaded_file, encoding='latin1', low_memory=False), None
                         except Exception as e:
                             return None, f"CSV Error: {str(e)}"
-                
+
                 elif file_ext == 'xlsx':
                     try:
                         return pd.read_excel(uploaded_file), None
                     except Exception as e:
                         return None, f"Excel Error: {str(e)}"
-                
+
                 elif file_ext == 'txt':
                     try:
                         return pd.read_csv(uploaded_file, delimiter='\t', low_memory=False), None
                     except Exception as e:
                         return None, f"Text File Error: {str(e)}"
-                
+
+                elif file_ext == 'json':
+                    try:
+                        return pd.read_json(uploaded_file, lines=True), None
+                    except Exception as e:
+                        return None, f"JSON Error: {str(e)}"
+
                 return None, "Unsupported file format"
-            
+
             except Exception as e:
                 return None, f"Unexpected error: {str(e)}"
         
