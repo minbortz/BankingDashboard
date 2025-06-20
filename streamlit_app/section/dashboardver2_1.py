@@ -28,12 +28,12 @@ def show_dashboard():
         index=["Dashboard", "Database", "User"].index(st.session_state.get("active_page", "Dashboard"))
     )
 
-    # Map from label to page key
     page_map = {
-        ":signal_strength: Dashboard": "Dashboard",
-        ":card_file_box: Database": "Database",
-        ":cop: User": "User"
+        "📶 Dashboard": "Dashboard",
+        "🗃️ Database": "Database",
+        "👮 User": "User"
     }
+
 
     if st.session_state.get("active_page") != page_map[selected]:
         st.session_state.active_page = page_map[selected]
